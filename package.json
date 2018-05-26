@@ -4,6 +4,7 @@
   "description":
     "Set of common functionality accross Decentraland projects servers.",
   "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
   "scripts": {
     "docs": "npx jsdoc -c conf.json -r src/**/*",
     "lint": "tslint -p src/tsconfig.json --fix",
