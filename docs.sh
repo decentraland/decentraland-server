@@ -9,7 +9,7 @@ set -e
 
 # show where we are on the machine
 pwd
-remote=git@github.com:decentraland/commons
+remote=git@github.com:decentraland/decentraland-server
 
 # make a directory to put the gp-pages branch
 mkdir gh-pages-branch

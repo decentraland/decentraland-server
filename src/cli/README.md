@@ -12,30 +12,24 @@ An example usage migth be:
 ```javascript
 #!/usr/bin/env babel-node
 
-import { runProgram } from 'decentraland-commons/cli'
+import { runProgram } from 'decentraland-server/cli'
 
 import itemsCli from './itemsCli'
 import locationsCli from './locationsCli'
 
-db.connect()
-    .then(() =>
-      runProgram([
-        itemsCli,
-        locationsCli
-      ])
-    )
+db.connect().then(() => runProgram([itemsCli, locationsCli]))
 ```
 
 **itemsCli.js**
 
 ```javascript
 export default {
-    addCommands(program) {
-        program
-            .command(/* something */)
-            .description(/* something */)
-            .action(() => {})
-    }
+  addCommands(program) {
+    program
+      .command(/* something */)
+      .description(/* something */)
+      .action(() => {})
+  }
 }
 ```
 
