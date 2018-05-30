@@ -343,7 +343,7 @@ export class Postgres {
    * @param {number} [start=0] - Start index for each placeholder
    * @return {array<string>}
    */
-  toValuePlaceholders(columns: Column, start?: number): string[] {
+  toValuePlaceholders(columns: Column, start: number = 0): string[] {
     const columnNames = Object.keys(columns)
     return columnNames.map((_, index) => `$${index + start + 1}`)
   }
