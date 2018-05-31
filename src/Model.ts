@@ -35,7 +35,7 @@ export class Model<T> {
    * @param  {string} [extra]      - String appended at the end of the query
    * @return {Promise<array>}
    */
-  static find<U>(
+  static find<U = any>(
     conditions?: QueryPart,
     orderBy?: QueryPart,
     extra?: string
@@ -48,7 +48,7 @@ export class Model<T> {
    * @param  {string|number|object} primaryKeyOrCond - If the argument is an object it uses it for the conditions. Otherwise it'll use it as the searched primaryKey.
    * @return {Promise<object>}
    */
-  static findOne<U>(
+  static findOne<U = any>(
     primaryKeyOrCond: string | number | QueryPart,
     orderBy?: QueryPart
   ): Promise<U> {
@@ -77,7 +77,7 @@ export class Model<T> {
    * @param  {array} [values]
    * @return {Promise<array>} - Array containing the matched rows
    */
-  static async query<U>(queryString, values?: any[]): Promise<U[]> {
+  static async query<U = any>(queryString, values?: any[]): Promise<U[]> {
     return await this.db.query(queryString, values)
   }
 
@@ -86,7 +86,7 @@ export class Model<T> {
    * @param  {object} row
    * @return {Promise<object>} the row argument with the inserted primaryKey
    */
-  static async insert<U>(row: U): Promise<U> {
+  static async insert<U = any>(row: U): Promise<U> {
     const insertion = await this.db.insert(this.tableName, row, this.primaryKey)
     row[this.primaryKey] = insertion.rows[0][this.primaryKey]
     return row
@@ -125,7 +125,7 @@ export class Model<T> {
    * @param  {object} attributes
    * @return {Model<instance>}
    */
-  constructor(attributes: T) {
+  constructor(attributes?: T) {
     this.tableName = this.getConstructor().tableName
     this.attributes = attributes
   }
