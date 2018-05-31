@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { SQL } from '../src/db'
+import { SQL } from '../src/sql'
 
 describe('SQL', () => {
   it('should work with a simple query', () => {
