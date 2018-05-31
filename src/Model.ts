@@ -5,9 +5,8 @@ import { QueryPart } from './db/types'
 /**
  * Basic Model class for accesing inner attributes easily
  */
-export class Model {
+export class Model<T> {
   public static tableName: string = null
-  public static columnNames: string[] = []
   public static primaryKey: string = 'id'
 
   /**
@@ -36,16 +35,11 @@ export class Model {
    * @param  {string} [extra]      - String appended at the end of the query
    * @return {Promise<array>}
    */
-  static find(
+  static find<U>(
     conditions?: QueryPart,
     orderBy?: QueryPart,
     extra?: string
-  ): Promise<any>
-  static find<T>(
-    conditions?: QueryPart,
-    orderBy?: QueryPart,
-    extra?: string
-  ): Promise<T[]> {
+  ): Promise<U[]> {
     return this.db.select(this.tableName, conditions, orderBy, extra)
   }
 
@@ -54,10 +48,10 @@ export class Model {
    * @param  {string|number|object} primaryKeyOrCond - If the argument is an object it uses it for the conditions. Otherwise it'll use it as the searched primaryKey.
    * @return {Promise<object>}
    */
-  static findOne(
+  static findOne<U>(
     primaryKeyOrCond: string | number | QueryPart,
     orderBy?: QueryPart
-  ): Promise<any> {
+  ): Promise<U> {
     const conditions =
       typeof primaryKeyOrCond === 'object'
         ? primaryKeyOrCond
@@ -83,21 +77,17 @@ export class Model {
    * @param  {array} [values]
    * @return {Promise<array>} - Array containing the matched rows
    */
-  static async query(queryString, values) {
+  static async query<U>(queryString, values?: any[]): Promise<U[]> {
     return await this.db.query(queryString, values)
   }
 
   /**
-   * Insert the row filtering the Model.columnNames to the Model.tableName table
+   * Insert the row the Model.tableName table
    * @param  {object} row
    * @return {Promise<object>} the row argument with the inserted primaryKey
    */
-  static async insert<T>(row: T): Promise<T> {
-    const insertion = await this.db.insert(
-      this.tableName,
-      pick(row, this.columnNames),
-      this.primaryKey
-    )
+  static async insert<U>(row: U): Promise<U> {
+    const insertion = await this.db.insert(this.tableName, row, this.primaryKey)
     row[this.primaryKey] = insertion.rows[0][this.primaryKey]
     return row
   }
@@ -109,11 +99,7 @@ export class Model {
    * @return {Promise<object>}
    */
   static update(changes: QueryPart, conditions: QueryPart) {
-    return this.db.update(
-      this.tableName,
-      pick(changes, this.columnNames),
-      conditions
-    )
+    return this.db.update(this.tableName, changes, conditions)
   }
 
   /**
@@ -131,61 +117,65 @@ export class Model {
    * @param  {object}  attributes - Model attributes to check
    * @return {boolean} true if at least one of the properties don't exist on the object
    */
-  static isIncomplete(attributes: any): boolean {
-    return this.columnNames.some(column => !attributes.hasOwnProperty(column))
-  }
-
-  public attributes: any
+  public attributes: T
+  public tableName: string
 
   /**
    * Creates a new instance storing the attributes for later use
    * @param  {object} attributes
    * @return {Model<instance>}
    */
-  constructor(attributes: any) {
-    this.attributes = attributes || {}
+  constructor(attributes: T) {
+    this.tableName = this.getConstructor().tableName
+    this.attributes = attributes
+  }
+
+  getConstructor() {
+    return <typeof Model>this.constructor
   }
 
   /**
    * Return the row for the this.attributes primaryKey property, forwards to Model.findOne
    * @return {Promise<object>}
    */
-  async retreive(): Promise<any> {
-    const Constructor = this.constructor.prototype
+  async retreive(): Promise<T> {
+    const Constructor = this.getConstructor()
     const primaryKey = this.attributes[Constructor.primaryKey]
-    this.attributes = await Constructor.findOne(primaryKey)
+    this.attributes = await Constructor.findOne<T>(primaryKey)
     return this.attributes
   }
 
   /**
-   * Forwards to Mode.insert using this.attributes
+   * Forwards to Model.insert using this.attributes
    */
-  async insert() {
-    return await this.constructor.prototype.insert(this.attributes)
+  insert() {
+    return this.getConstructor().insert<T>(this.attributes)
   }
 
   /**
    * Forwards to Mode.update using this.attributes. If no conditions are supplied, it uses this.attributes[primaryKey]
    * @params {object} [conditions={ primaryKey: this.attributes[primaryKey] }]
    */
-  async update(conditions) {
+  update(conditions) {
+    const Constructor = this.getConstructor()
     if (!conditions) {
-      const primaryKey = this.constructor.prototype.primaryKey
+      const primaryKey = Constructor.primaryKey
       conditions = { [primaryKey]: this.attributes[primaryKey] }
     }
-    return await this.constructor.prototype.update(this.attributes, conditions)
+    return Constructor.update(this.attributes, conditions)
   }
 
   /**
    * Forwards to Mode.delete using this.attributes. If no conditions are supplied, it uses this.attributes[primaryKey]
    * @params {object} [conditions={ primaryKey: this.attributes[primaryKey] }]
    */
-  async delete(conditions) {
+  delete(conditions) {
+    const Constructor = this.getConstructor()
     if (!conditions) {
-      const primaryKey = this.constructor.prototype.primaryKey
+      const primaryKey = Constructor.primaryKey
       conditions = { [primaryKey]: this.attributes[primaryKey] }
     }
-    return await this.constructor.prototype.delete(conditions)
+    return Constructor.delete(conditions)
   }
 
   /**
@@ -194,14 +184,6 @@ export class Model {
    */
   isEmpty() {
     return !this.get()
-  }
-
-  /**
-   * Forwards to Mode.isIncomplete using this.attributes.
-   * @return {boolean}
-   */
-  isIncomplete() {
-    return this.constructor.prototype.isIncomplete(this.attributes)
   }
 
   /**
@@ -264,16 +246,4 @@ export class Model {
 
     return this
   }
-}
-
-function pick(obj: { key?: any }, keys: string[]): { key?: any } {
-  const result = {}
-
-  for (const key of keys) {
-    if (obj.hasOwnProperty(key)) {
-      result[key] = obj[key]
-    }
-  }
-
-  return result
 }
