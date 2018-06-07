@@ -156,7 +156,7 @@ export class Model<T> {
    * Forwards to Mode.update using this.attributes. If no conditions are supplied, it uses this.attributes[primaryKey]
    * @params {object} [conditions={ primaryKey: this.attributes[primaryKey] }]
    */
-  update(conditions) {
+  update(conditions?: QueryPart) {
     const Constructor = this.getConstructor()
     if (!conditions) {
       const primaryKey = Constructor.primaryKey
@@ -169,7 +169,7 @@ export class Model<T> {
    * Forwards to Mode.delete using this.attributes. If no conditions are supplied, it uses this.attributes[primaryKey]
    * @params {object} [conditions={ primaryKey: this.attributes[primaryKey] }]
    */
-  delete(conditions) {
+  delete(conditions?: QueryPart) {
     const Constructor = this.getConstructor()
     if (!conditions) {
       const primaryKey = Constructor.primaryKey
