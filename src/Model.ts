@@ -119,6 +119,7 @@ export class Model<T> {
    */
   public attributes: T
   public tableName: string
+  public primaryKey: keyof T
 
   /**
    * Creates a new instance storing the attributes for later use
@@ -126,8 +127,11 @@ export class Model<T> {
    * @return {Model<instance>}
    */
   constructor(attributes?: T) {
-    this.tableName = this.getConstructor().tableName
+    const Constructor = this.getConstructor()
+
+    this.tableName = Constructor.tableName
     this.attributes = attributes
+    this.primaryKey = Constructor.primaryKey as keyof T
   }
 
   getConstructor() {
@@ -135,13 +139,25 @@ export class Model<T> {
   }
 
   /**
-   * Return the row for the this.attributes primaryKey property, forwards to Model.findOne
+   * Return a query by id
+   */
+  getDefaultQuery(): Partial<T> {
+    const query: Partial<T> = {}
+    query[this.primaryKey] = this.get(this.primaryKey)
+    return query
+  }
+
+  /**
+   * Return the row for the this.attributes primaryKey property or the supplied conditions, forwards to Model.findOne
+   * @param  {object} conditions - An object describing the WHERE clause.
    * @return {Promise<object>}
    */
-  async retreive(): Promise<T> {
+  async retreive(conditions?: Partial<T>): Promise<T> {
     const Constructor = this.getConstructor()
-    const primaryKey = this.attributes[Constructor.primaryKey]
-    this.attributes = await Constructor.findOne<T>(primaryKey)
+    const query = conditions ? conditions : this.getDefaultQuery()
+
+    this.attributes = await Constructor.findOne<T>(query)
+
     return this.attributes
   }
 
@@ -156,34 +172,26 @@ export class Model<T> {
    * Forwards to Mode.update using this.attributes. If no conditions are supplied, it uses this.attributes[primaryKey]
    * @params {object} [conditions={ primaryKey: this.attributes[primaryKey] }]
    */
-  update(conditions?: QueryPart) {
-    const Constructor = this.getConstructor()
-    if (!conditions) {
-      const primaryKey = Constructor.primaryKey
-      conditions = { [primaryKey]: this.attributes[primaryKey] }
-    }
-    return Constructor.update(this.attributes, conditions)
+  update(conditions?: Partial<T>) {
+    const query = conditions ? conditions : this.getDefaultQuery()
+    return this.getConstructor().update(this.attributes, query)
   }
 
   /**
    * Forwards to Mode.delete using this.attributes. If no conditions are supplied, it uses this.attributes[primaryKey]
    * @params {object} [conditions={ primaryKey: this.attributes[primaryKey] }]
    */
-  delete(conditions?: QueryPart) {
-    const Constructor = this.getConstructor()
-    if (!conditions) {
-      const primaryKey = Constructor.primaryKey
-      conditions = { [primaryKey]: this.attributes[primaryKey] }
-    }
-    return Constructor.delete(conditions)
+  delete(conditions?: Partial<T>) {
+    const query = conditions ? conditions : this.getDefaultQuery()
+    return this.getConstructor().delete(query)
   }
 
   /**
    * Returns true if the `attributes` property evaluates to false
    * @return {boolean}
    */
-  isEmpty() {
-    return !this.get()
+  isEmpty(): boolean {
+    return !this.attributes
   }
 
   /**
@@ -191,8 +199,8 @@ export class Model<T> {
    * @param  {string} [key] - Key on the attributes object. If falsy, it'll return the full attributes object
    * @return {object} Value found, if any
    */
-  get(key?: string) {
-    return key ? this.attributes[key] : this.attributes
+  get<K extends keyof T>(key: K): T[K] {
+    return this.attributes[key]
   }
 
   /**
@@ -201,6 +209,8 @@ export class Model<T> {
    * @return {object} The value of the searched key or null if any key is missing along the way
    */
   getIn(keyPath: string[]) {
+    if (keyPath.length === 0) return null
+
     let value = this.attributes
 
     for (let prop of keyPath) {
@@ -217,7 +227,7 @@ export class Model<T> {
    * @param {object} value
    * @return {Model<instace>} The instance of the model (chainable)
    */
-  set(key: string, value) {
+  set<K extends keyof T>(key: K, value: T[K]): Model<T> {
     this.attributes[key] = value
     return this
   }
