@@ -1,13 +1,18 @@
 import * as pg from 'pg'
-import { Column, OrderClause, QueryArgument, QueryPart } from './types'
+import {
+  Column,
+  OrderClause,
+  QueryArgument,
+  QueryPart,
+  OnConflict
+} from './types'
 
 export class Postgres {
   client: pg.Client
 
   /**
    * Connect to the Postgres database
-   * @param  {string} connectionString
-   * @return {Promise}
+   * @param connectionString
    */
   connect(connectionString?: string) {
     this.client = new pg.Client(connectionString)
@@ -16,9 +21,9 @@ export class Postgres {
 
   /**
    * Forward queries to the pg client. Check {@link https://node-postgres.com/} for more info.
-   * @param  {string} queryString
-   * @param  {array} [values]
-   * @return {Promise<array>} - Array containing the matched rows
+   * @param  queryString
+   * @param  [values]    - Values to replace in the placeholders, if any
+   * @return Array containing the matched rows
    */
   async query(queryString: string | QueryArgument, values?: any[]) {
     const result = await this.client.query(queryString, values)
@@ -27,10 +32,10 @@ export class Postgres {
 
   /**
    * Counts rows from a query result
-   * @param  {string} tableName
-   * @param  {object} [conditions] - An object describing the WHERE clause. The properties should be the column names and it's values the condition value.
-   * @param  {string} [extra]      - String appended at the end of the query
-   * @return {Promise<array>} - Rows
+   * @param  tableName
+   * @param  [conditions] - An object describing the WHERE clause. The properties should be the column names and it's values the condition value.
+   * @param  [extra]      - String appended at the end of the query
+   * @return Rows
    */
   count(
     tableName: string,
@@ -48,11 +53,11 @@ export class Postgres {
 
   /**
    * Select rows from a table
-   * @param  {string} tableName
-   * @param  {QueryPart} [conditions] - An object describing the WHERE clause. The properties should be the column names and it's values the condition value.
-   * @param  {object} [orderBy]    - An object describing the ORDER BY clause. The properties should be the column names and it's values the order value. See {@link postgres#getOrderValues}
-   * @param  {string} [extra]      - String appended at the end of the query
-   * @return {Promise<array>} - Rows
+   * @param  tableName
+   * @param  [conditions] - An object describing the WHERE clause. The properties should be the column names and it's values the condition value.
+   * @param  [orderBy]    - An object describing the ORDER BY clause. The properties should be the column names and it's values the order value. See {@link postgres#getOrderValues}
+   * @param  [extra]      - String appended at the end of the query
+   * @return Rows
    */
   select(
     tableName: string,
@@ -65,10 +70,10 @@ export class Postgres {
 
   /**
    * Select the first row that matches
-   * @param  {string} tableName
-   * @param  {object} [conditions] - An object describing the WHERE clause. The properties should be the column names and it's values the condition value.
-   * @param  {object} [orderBy]    - An object describing the ORDER BY clause. The properties should be the column names and it's values the order value. See {@link postgres#getOrderValues}
-   * @return {Promise<object>} - Row
+   * @param  tableName
+   * @param  [conditions] - An object describing the WHERE clause. The properties should be the column names and it's values the condition value.
+   * @param  [orderBy]    - An object describing the ORDER BY clause. The properties should be the column names and it's values the order value. See {@link postgres#getOrderValues}
+   * @return Row
    */
   async selectOne(
     tableName: string,
@@ -86,8 +91,7 @@ export class Postgres {
     return rows[0]
   }
 
-  // Internal
-  async _query(
+  private async _query(
     method: string,
     tableName: string,
     conditions?: QueryPart,
@@ -119,15 +123,16 @@ export class Postgres {
    * Insert an object on the database.
    * @example
    * insert('users', { name: 'Name', avatar: 'image.png' }) => INSERT INTO users ("name", "avatar") VALUES ('Name', 'image.png')
-   * @param  {string} tableName
-   * @param  {object} changes           - An object describing the insertion. The properties should be the column names and it's values the value to insert
-   * @param  {string} [primaryKey='id'] - Which primary key return upon insertion
-   * @return {Promise<object>}
+   * @param tableName
+   * @param changes           - An object describing the insertion. The properties should be the column names and it's values the value to insert
+   * @param [primaryKey='id'] - Which primary key return upon insertion
+   * @param [onConflict] - Targets for the ON CONFLICT clause and subsequent changes
    */
   async insert(
     tableName: string,
     changes: QueryPart,
-    primaryKey: string = 'id'
+    primaryKey: string = 'id',
+    onConflict: OnConflict = { target: [], changes: {} }
   ): Promise<any> {
     if (!changes) {
       throw new Error(
@@ -135,18 +140,18 @@ export class Postgres {
       )
     }
 
-    changes.created_at = changes.created_at || new Date()
-    changes.updated_at = changes.updated_at || new Date()
-
     const values = Object.values(changes)
+    const conflictValues = Object.values(onConflict.changes)
 
     return await this.client.query(
       `INSERT INTO ${tableName}(
-      ${this.toColumnFields(changes)}
-    ) VALUES(
-      ${this.toValuePlaceholders(changes)}
-    ) RETURNING ${primaryKey}`,
-      values
+        ${this.toColumnFields(changes)}
+      ) VALUES(
+        ${this.toValuePlaceholders(changes)}
+      )
+        ${this.toOnConflictUpsert(onConflict, values.length)}
+        RETURNING ${primaryKey}`,
+      values.concat(conflictValues)
     )
   }
 
@@ -154,10 +159,9 @@ export class Postgres {
    * Update an object on the database.
    * @example
    * update('users', { name: 'New Name' } { id: 22 }) => UPDATE users SET "name"='New Name' WHERE "id"=22
-   * @param  {string} tableName
-   * @param  {object} changes    - An object describing the updates. The properties should be the column names and it's values the value to update.
-   * @param  {object} conditions - An object describing the WHERE clause. The properties should be the column names and it's values the condition value.
-   * @return {Promise<object>}
+   * @param tableName
+   * @param changes    - An object describing the changes. The properties should be the column names and it's values the value to update.
+   * @param conditions - An object describing the WHERE clause. The properties should be the column names and it's values the condition value.
    */
   async update(
     tableName: string,
@@ -174,8 +178,6 @@ export class Postgres {
         `Tried to update ${tableName} without a WHERE clause. Supply a conditions object`
       )
     }
-
-    changes.updated_at = changes.updated_at || new Date()
 
     const changeValues = Object.values(changes)
     const conditionValues = Object.values(conditions)
@@ -197,9 +199,8 @@ export class Postgres {
 
   /**
    * Delete rows from the database
-   * @param  {string} tableName
-   * @param  {object} conditions - An object describing the WHERE clause.
-   * @return {Promise<object>}
+   * @param tableName
+   * @param conditions - An object describing the WHERE clause.
    */
   delete(tableName: string, conditions: QueryPart): Promise<any> {
     if (!conditions) {
@@ -219,20 +220,17 @@ export class Postgres {
 
   /**
    * Creates a table with the desired rows if it doesn't exist.
-   * Adds:
-   *   - `created_at` and `updated_at` columns by default
-   *   - A secuence with the table name to use as autoincrement id
+   * Adds a secuence with the table name to use as autoincrement id
    * @example
    * this.createTable('users', `
    *   "id" int NOT NULL DEFAULT nextval('users_id_seq'),
    *   "name" varchar(42) NOT NULL
    * `)
-   * @param  {string} tableName
-   * @param  {string} rows    - Each desired row to create
-   * @param  {object} options - Options controling the behaviour of createTable
-   * @param  {string} [options.sequenceName=`${tableName}_id_seq`] - Override the default sequence name. The sequenceName is a falsy value, the sequence will be skipped
-   * @param  {string} [options.primaryKey="id"]                    - Override the default primary key.
-   * @return {Promise}
+   * @param tableName
+   * @param rows    - Each desired row to create
+   * @param options - Options controling the behaviour of createTable
+   * @param [options.sequenceName=`${tableName}_id_seq`] - Override the default sequence name. The sequenceName is a falsy value, the sequence will be skipped
+   * @param [options.primaryKey="id"]                    - Override the default primary key.
    */
   async createTable(
     tableName: string,
@@ -245,8 +243,6 @@ export class Postgres {
 
     await this.client.query(`CREATE TABLE IF NOT EXISTS "${tableName}" (
       ${rows}
-      "created_at" timestamp NOT NULL,
-      "updated_at" timestamp,
       PRIMARY KEY ("${primaryKey}")
     );`)
 
@@ -255,11 +251,10 @@ export class Postgres {
 
   /**
    * Creates an index if it doesn't exist
-   * @param  {string} tableName
-   * @param  {string} name of the index
-   * @param  {array<string>} field
-   * @param  {object} extra conditions for the index
-   * @return {Promise}
+   * @param tableName
+   * @param name of the index
+   * @param field
+   * @param extra conditions for the index
    */
   createIndex(
     tableName: string,
@@ -302,31 +297,41 @@ export class Postgres {
 
   /**
    * Truncates the table provided
-   * @param  {string} tableName
-   * @return {Promise} Query result
+   * @param  tableName
+   * @return Query result
    */
   truncate(tableName: string) {
     return this.client.query(`TRUNCATE ${tableName} RESTART IDENTITY;`)
   }
 
-  /*
+  /**
+   *
+   * @param onConflict - Targets for the ON CONFLICT clause and subsequent changes
+   * @param indexStart - Where to start the placeholder index for update values
+   */
+  toOnConflictUpsert({ target, changes }: OnConflict, indexStart = 0) {
+    return target.length > 0
+      ? `ON CONFLICT (${target}) DO
+        UPDATE SET ${this.toAssignmentFields(changes, indexStart)}`
+      : 'ON CONFLICT DO NOTHING'
+  }
+
+  /**
    * From an map of { column1 => int, column2 => string } to an array containing
    *   ['"column1"', '"column2"', (...)]
-   * @param {object} columns - Each column as a property of the object
-   * @return {array<string>}
+   * @param columns - Each column as a property of the object
    */
   toColumnFields(columns: Column): string[] {
     const columnNames = Object.keys(columns)
     return columnNames.map(name => `"${name}"`)
   }
 
-  /*
+  /**
    * From an map of { column1 => int, column2 => string } to an array containing
    *   ['"column1" = $1', '"column2" = $2', (...)]
    * The index from which to start the placeholders is configurable
-   * @param {object} columns   - Each column as a property of the object
-   * @param {number} [start=0] - Start index for each placeholder
-   * @return {array<string>}
+   * @param columns   - Each column as a property of the object
+   * @param [start=0] - Start index for each placeholder
    */
   toAssignmentFields(columns: Column, start: number = 0): string[] {
     const columnNames = Object.keys(columns)
@@ -335,24 +340,22 @@ export class Postgres {
     )
   }
 
-  /*
+  /**
    * From an map of { column1 => int, column2 => string } to an array containing
    *  ['$1', '$2', (...)]
    * The index from which to start the placeholders is configurable
-   * @param {object} columns   - Each column as a property of the object
-   * @param {number} [start=0] - Start index for each placeholder
-   * @return {array<string>}
+   * @param columns   - Each column as a property of the object
+   * @param [start=0] - Start index for each placeholder
    */
   toValuePlaceholders(columns: Column, start: number = 0): string[] {
     const columnNames = Object.keys(columns)
     return columnNames.map((_, index) => `$${index + start + 1}`)
   }
 
-  /*
+  /**
    * From an map of { column1 => DESC/ASC, column2 => DESC/ASC } to an array containing
    *  ['column1 DESC/ASC, 'column2 DESC/ASC', (...)]
-   * @param {object} columns - Each column as a property of the object, the values represent the desired order
-   * @return {array<string>}
+   * @param columns - Each column as a property of the object, the values represent the desired order
    */
   getOrderValues(order: OrderClause): string[] {
     return Object.keys(order).map(column => `"${column}" ${order[column]}`)
@@ -360,7 +363,6 @@ export class Postgres {
 
   /**
    * Close db connection
-   * @return {Promise<void>}
    */
   async close() {
     return await this.client.end()

@@ -1,6 +1,6 @@
 import { clients } from './db'
 import { Postgres } from './db/postgres'
-import { QueryPart } from './db/types'
+import { PrimaryKey, QueryPart, OnConflict } from './db/types'
 
 /**
  * Basic Model class for accesing inner attributes easily
@@ -8,6 +8,7 @@ import { QueryPart } from './db/types'
 export class Model<T> {
   public static tableName: string = null
   public static primaryKey: string = 'id'
+  public static withTimestamps: boolean = true
 
   /**
    * DB client to use. We use Postgres by default. Can be changed via Model.useDB('db client')
@@ -35,9 +36,9 @@ export class Model<T> {
    * @param  {string} [extra]      - String appended at the end of the query
    * @return {Promise<array>}
    */
-  static find<U = any>(
-    conditions?: QueryPart,
-    orderBy?: QueryPart,
+  static find<U extends QueryPart = any>(
+    conditions?: Partial<U>,
+    orderBy?: Partial<U>,
     extra?: string
   ): Promise<U[]> {
     return this.db.select(this.tableName, conditions, orderBy, extra)
@@ -48,9 +49,17 @@ export class Model<T> {
    * @param  {string|number|object} primaryKeyOrCond - If the argument is an object it uses it for the conditions. Otherwise it'll use it as the searched primaryKey.
    * @return {Promise<object>}
    */
-  static findOne<U = any>(
-    primaryKeyOrCond: string | number | QueryPart,
-    orderBy?: QueryPart
+  static findOne<U = any, P extends QueryPart = any>(
+    primaryKey: PrimaryKey,
+    orderBy?: Partial<P>
+  )
+  static findOne<U extends QueryPart = any, P extends QueryPart = any>(
+    conditions: Partial<U>,
+    orderBy?: Partial<P>
+  )
+  static findOne<U extends QueryPart = any, P extends QueryPart = any>(
+    primaryKeyOrCond: PrimaryKey | Partial<U>,
+    orderBy?: Partial<P>
   ): Promise<U> {
     const conditions =
       typeof primaryKeyOrCond === 'object'
@@ -66,7 +75,10 @@ export class Model<T> {
    * @param  {string} [extra]      - String appended at the end of the query
    * @return {Promise<integer>}
    */
-  static async count(conditions: QueryPart, extra?: string): Promise<number> {
+  static async count<U extends QueryPart = any>(
+    conditions: Partial<U>,
+    extra?: string
+  ): Promise<number> {
     const result = await this.db.count(this.tableName, conditions, extra)
     return result.length ? parseInt(result[0].count, 10) : 0
   }
@@ -86,8 +98,53 @@ export class Model<T> {
    * @param  {object} row
    * @return {Promise<object>} the row argument with the inserted primaryKey
    */
-  static async insert<U = any>(row: U): Promise<U> {
-    const insertion = await this.db.insert(this.tableName, row, this.primaryKey)
+  static async insert<U extends QueryPart = any>(row: U): Promise<U> {
+    return this._insert(row)
+  }
+
+  /**
+   * Upsert the row the Model.tableName table
+   * @param  row
+   * @param  target
+   * @param  changes
+   * @return row argument with the inserted primaryKey
+   */
+  static async upsert<U extends QueryPart = any>(
+    row: U,
+    target: (keyof U)[],
+    changes?: Partial<U>
+  ): Promise<U> {
+    const onConflict: OnConflict = { target, changes }
+    return this._insert(row, onConflict)
+  }
+
+  private static async _insert<U extends QueryPart = any>(
+    row: U,
+    onConflict?: OnConflict
+  ): Promise<U> {
+    const createdAt = new Date()
+    const updatedAt = new Date()
+
+    if (onConflict) {
+      onConflict.changes = onConflict.changes || row
+    }
+
+    if (this.withTimestamps) {
+      row.created_at = row.created_at || createdAt
+      row.updated_at = row.updated_at || updatedAt
+
+      if (onConflict) {
+        onConflict.changes.updated_at =
+          onConflict.changes.updated_at || updatedAt
+      }
+    }
+
+    const insertion = await this.db.insert(
+      this.tableName,
+      row,
+      this.primaryKey,
+      onConflict
+    )
     row[this.primaryKey] = insertion.rows[0][this.primaryKey]
     return row
   }
@@ -98,7 +155,13 @@ export class Model<T> {
    * @param  {object} conditions - An object describing the WHERE clause.
    * @return {Promise<object>}
    */
-  static update(changes: QueryPart, conditions: QueryPart) {
+  static update<U extends QueryPart = any, P extends QueryPart = any>(
+    changes: Partial<U>,
+    conditions: Partial<P>
+  ) {
+    if (this.withTimestamps) {
+      changes.updated_at = changes.updated_at || new Date()
+    }
     return this.db.update(this.tableName, changes, conditions)
   }
 
@@ -107,7 +170,7 @@ export class Model<T> {
    * @param  {object} conditions - An object describing the WHERE clause.
    * @return {Promise<object>}
    */
-  static delete(conditions: QueryPart) {
+  static delete<U extends QueryPart = any>(conditions: Partial<U>) {
     return this.db.delete(this.tableName, conditions)
   }
 
@@ -166,6 +229,13 @@ export class Model<T> {
    */
   insert() {
     return this.getConstructor().insert<T>(this.attributes)
+  }
+
+  /**
+   * Forwards to Model.insert using this.attributes and the supplied columns as ON CONFLICT targets
+   */
+  upsert<K extends keyof T>(target: K[], changes?: Partial<T>) {
+    return this.getConstructor().upsert<T>(this.attributes, target, changes)
   }
 
   /**

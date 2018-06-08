@@ -11,3 +11,8 @@ export interface Column {
 export interface OrderClause {
   [columnName: string]: string
 }
+export interface OnConflict<U extends QueryPart = any> {
+  target: (keyof U)[]
+  changes: QueryPart
+}
+export type PrimaryKey = string | number

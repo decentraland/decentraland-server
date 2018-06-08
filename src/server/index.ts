@@ -5,7 +5,7 @@ let rollbar = null
 
 /**
  * Set up rollbar integration to report server errors raised while using {@link server#handleRequest}
- * @param  {string} accessToken - Rollbar access token
+ * @param accessToken - Rollbar access token
  */
 export function useRollbar(accessToken: string): void {
   if (!accessToken) return
@@ -18,8 +18,8 @@ export function useRollbar(accessToken: string): void {
  *        const param = extractFromReq(req, 'param')
  *        return 'Success'
  *    }))
- * @param  {function} callback - Actual handler, the return value will be used as response to the client. It will receive (req, res) as parameters
- * @return {function} - Wrapper function
+ * @param callback - Actual handler, the return value will be used as response to the client. It will receive (req, res) as parameters
+ * @return - Wrapper function
  */
 export function handleRequest(
   callback: (req: Request, res: Response) => void
@@ -42,9 +42,9 @@ export function handleRequest(
 
 /**
  * Get a named parameter from a request object. It leverages GET and POST requests and parses JSON objects
- * @param  {object} req   - Express js request object. Check {@link https://expressjs.com} for more info.
- * @param  {string} param - Searched param
- * @return {object} - The param value, it throws if it's not present
+ * @param req   - Express js request object. Check {@link https://expressjs.com} for more info.
+ * @param param - Searched param
+ * @return - The param value, it throws if it's not present
  */
 export function extractFromReq(req: Request, param: string): string {
   let value = null
