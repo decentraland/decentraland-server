@@ -141,7 +141,7 @@ export class Postgres {
     }
 
     const values = Object.values(changes)
-    const conflictValues = Object.values(onConflict.changes)
+    const conflictValues = Object.values(onConflict.changes || {})
 
     return await this.client.query(
       `INSERT INTO ${tableName}(

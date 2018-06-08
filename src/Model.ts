@@ -111,10 +111,8 @@ export class Model<T> {
    */
   static async upsert<U extends QueryPart = any>(
     row: U,
-    target: (keyof U)[],
-    changes?: Partial<U>
+    onConflict: OnConflict<U> = { target: [this.primaryKey] }
   ): Promise<U> {
-    const onConflict: OnConflict = { target, changes }
     return this._insert(row, onConflict)
   }
 
@@ -232,10 +230,10 @@ export class Model<T> {
   }
 
   /**
-   * Forwards to Model.insert using this.attributes and the supplied columns as ON CONFLICT targets
+   * Forwards to Model.insert using this.attributes and the supplied columns or the primaryKey as ON CONFLICT targets
    */
-  upsert<K extends keyof T>(target: K[], changes?: Partial<T>) {
-    return this.getConstructor().upsert<T>(this.attributes, target, changes)
+  upsert<K extends keyof T>(onConflict?: OnConflict<T>) {
+    return this.getConstructor().upsert<T>(this.attributes, onConflict)
   }
 
   /**

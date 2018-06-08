@@ -1,8 +1,7 @@
 {
   "name": "decentraland-server",
   "version": "0.0.0-development",
-  "description":
-    "Set of common functionality accross Decentraland projects servers.",
+  "description": "Set of common functionality accross Decentraland projects servers.",
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
   "scripts": {
@@ -14,8 +13,7 @@
     "prebuild": "npm run clean && npm run init",
     "build": "tsc -p src/tsconfig.json",
     "pretest": "npm run build",
-    "test":
-      "npm run build && tsc -p specs/tsconfig.json && mocha specs/**/*.spec.js",
+    "test": "npm run build && tsc -p specs/tsconfig.json && mocha specs/**/*.spec.js",
     "semantic-release": "semantic-release",
     "commitmsg": "validate-commit-msg"
   },
@@ -23,8 +21,15 @@
     "type": "git",
     "url": "https://github.com/decentraland/decentraland-server.git"
   },
-  "files": ["dist"],
-  "keywords": ["common", "modules", "server", "decentraland"],
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "common",
+    "modules",
+    "server",
+    "decentraland"
+  ],
   "author": "Decentraland",
   "license": "ISC",
   "prettier": {
