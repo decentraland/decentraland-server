@@ -126,7 +126,7 @@ export class Postgres {
    * @param tableName
    * @param changes           - An object describing the insertion. The properties should be the column names and it's values the value to insert
    * @param [primaryKey='id'] - Which primary key return upon insertion
-   * @param [onConflict] - Targets for the ON CONFLICT clause and subsequent changes
+   * @param [onConflict]      - Targets for the ON CONFLICT clause and subsequent changes
    */
   async insert(
     tableName: string,
@@ -273,8 +273,7 @@ export class Postgres {
 
   /**
    * Creates a sequence if it doesn't exist
-   * @param  {string} name
-   * @return {Promise}
+   * @param name
    */
   createSequence(name: string) {
     try {

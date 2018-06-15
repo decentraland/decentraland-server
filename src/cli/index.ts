@@ -3,7 +3,7 @@ import * as inquirer from 'inquirer'
 
 /**
  * Runs a set of different clients. Useful to split functionalities and lower boilerplate code
- * @param {array} clients - An array of objects that implement the `addCommand method`
+ * @param clients - An array of objects that implement the `addCommand method`
  */
 export function runProgram(clients: { addCommands: (program: any) => void }[]) {
   for (const client of clients) {
@@ -26,8 +26,8 @@ export function runProgram(clients: { addCommands: (program: any) => void }[]) {
 
 /**
  * Query the user for a boolean result
- * @param {string} [text=Are you sure?]  - The text to show to the user
- * @param {boolean} [defaultAnswer=true] - The value for the default answer
+ * @param [text=Are you sure?]  - The text to show to the user
+ * @param [defaultAnswer=true] - The value for the default answer
  */
 export async function confirm(
   text?: string,
@@ -45,8 +45,8 @@ export async function confirm(
 
 /**
  * Uses inquier {@link https://github.com/SBoudrias/Inquirer.js} to launch the prompt interface (inquiry session)
- * @param {Array} [questions = []] - questions containing Question Object {@link https://github.com/SBoudrias/Inquirer.js#objects}
- * @param {Promise} answers - A key/value hash containing the client answers in each prompt.
+ * @param [questions = []] - questions containing Question Object {@link https://github.com/SBoudrias/Inquirer.js#objects}
+ * @param answers - A key/value hash containing the client answers in each prompt.
  */
 export function prompt(questions: any[]): Promise<any> {
   return inquirer.prompt(questions)

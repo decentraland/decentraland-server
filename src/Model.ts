@@ -12,14 +12,12 @@ export class Model<T> {
 
   /**
    * DB client to use. We use Postgres by default. Can be changed via Model.useDB('db client')
-   * It's the same for
-   * @type {object}
    */
   public static db: Postgres = clients.postgres
 
   /**
    * Change the current DB client
-   * @param {string|object} dbClient - The name of an available db client (from /db) or an object with the same API
+   * @param dbClient - The name of an available db client (from /db) or an object with the same API
    */
   static setDb(clientName: keyof typeof clients = 'postgres') {
     if (typeof clientName === 'string' && !clients[clientName]) {
@@ -31,10 +29,9 @@ export class Model<T> {
 
   /**
    * Return the rows that match the conditions
-   * @param  {object} [conditions] - It returns all rows if empty
-   * @param  {object} [orderBy]    - Object describing the column ordering
-   * @param  {string} [extra]      - String appended at the end of the query
-   * @return {Promise<array>}
+   * @param [conditions] - It returns all rows if empty
+   * @param [orderBy]    - Object describing the column ordering
+   * @param [extra]      - String appended at the end of the query
    */
   static find<U extends QueryPart = any>(
     conditions?: Partial<U>,
@@ -46,8 +43,7 @@ export class Model<T> {
 
   /**
    * Return the row for the supplied primaryKey or condition object
-   * @param  {string|number|object} primaryKeyOrCond - If the argument is an object it uses it for the conditions. Otherwise it'll use it as the searched primaryKey.
-   * @return {Promise<object>}
+   * @param primaryKeyOrCond - If the argument is an object it uses it for the conditions. Otherwise it'll use it as the searched primaryKey.
    */
   static findOne<U = any, P extends QueryPart = any>(
     primaryKey: PrimaryKey,
@@ -71,9 +67,8 @@ export class Model<T> {
 
   /**
    * Count the rows for the table
-   * @param  {object} [conditions] - It returns all rows if empty
-   * @param  {string} [extra]      - String appended at the end of the query
-   * @return {Promise<integer>}
+   * @param [conditions] - It returns all rows if empty
+   * @param [extra]      - String appended at the end of the query
    */
   static async count<U extends QueryPart = any>(
     conditions: Partial<U>,
@@ -85,9 +80,9 @@ export class Model<T> {
 
   /**
    * Forward queries to the db client
-   * @param  {string} queryString
-   * @param  {array} [values]
-   * @return {Promise<array>} - Array containing the matched rows
+   * @param  queryString
+   * @param  [values]
+   * @return Array containing the matched rows
    */
   static async query<U = any>(queryString, values?: any[]): Promise<U[]> {
     return await this.db.query(queryString, values)
@@ -95,8 +90,8 @@ export class Model<T> {
 
   /**
    * Insert the row the Model.tableName table
-   * @param  {object} row
-   * @return {Promise<object>} the row argument with the inserted primaryKey
+   * @param  row
+   * @return The row argument with the inserted primaryKey
    */
   static async insert<U extends QueryPart = any>(row: U): Promise<U> {
     return this._insert(row)
@@ -104,10 +99,10 @@ export class Model<T> {
 
   /**
    * Upsert the row the Model.tableName table
-   * @param  row
-   * @param  target
-   * @param  changes
-   * @return row argument with the inserted primaryKey
+   * @param row
+   * @param target
+   * @param changes
+   * @return Row argument with the inserted primaryKey
    */
   static async upsert<U extends QueryPart = any>(
     row: U,
@@ -149,9 +144,8 @@ export class Model<T> {
 
   /**
    * Update the row on the Model.tableName table.
-   * @param  {object} changes    - An object describing the updates.
-   * @param  {object} conditions - An object describing the WHERE clause.
-   * @return {Promise<object>}
+   * @param changes    - An object describing the updates.
+   * @param conditions - An object describing the WHERE clause.
    */
   static update<U extends QueryPart = any, P extends QueryPart = any>(
     changes: Partial<U>,
@@ -165,8 +159,7 @@ export class Model<T> {
 
   /**
    * Delete the row on the Model.tableName table.
-   * @param  {object} conditions - An object describing the WHERE clause.
-   * @return {Promise<object>}
+   * @param conditions - An object describing the WHERE clause.
    */
   static delete<U extends QueryPart = any>(conditions: Partial<U>) {
     return this.db.delete(this.tableName, conditions)
@@ -175,8 +168,8 @@ export class Model<T> {
   /**
    * Checks to see if all column names exist on the attributes object.
    * If you need a more complex approach (skipping NULLABLE columns for example) you can override it.
-   * @param  {object}  attributes - Model attributes to check
-   * @return {boolean} true if at least one of the properties don't exist on the object
+   * @param  attributes - Model attributes to check
+   * @return True if at least one of the properties don't exist on the object
    */
   public attributes: T
   public tableName: string
@@ -184,8 +177,7 @@ export class Model<T> {
 
   /**
    * Creates a new instance storing the attributes for later use
-   * @param  {object} attributes
-   * @return {Model<instance>}
+   * @param attributes
    */
   constructor(attributes?: T) {
     const Constructor = this.getConstructor()
@@ -210,8 +202,7 @@ export class Model<T> {
 
   /**
    * Return the row for the this.attributes primaryKey property or the supplied conditions, forwards to Model.findOne
-   * @param  {object} conditions - An object describing the WHERE clause.
-   * @return {Promise<object>}
+   * @param  conditions - An object describing the WHERE clause.
    */
   async retreive(conditions?: Partial<T>): Promise<T> {
     const Constructor = this.getConstructor()
@@ -238,7 +229,7 @@ export class Model<T> {
 
   /**
    * Forwards to Mode.update using this.attributes. If no conditions are supplied, it uses this.attributes[primaryKey]
-   * @params {object} [conditions={ primaryKey: this.attributes[primaryKey] }]
+   * @params [conditions={ primaryKey: this.attributes[primaryKey] }]
    */
   update(conditions?: Partial<T>) {
     const query = conditions ? conditions : this.getDefaultQuery()
@@ -247,7 +238,7 @@ export class Model<T> {
 
   /**
    * Forwards to Mode.delete using this.attributes. If no conditions are supplied, it uses this.attributes[primaryKey]
-   * @params {object} [conditions={ primaryKey: this.attributes[primaryKey] }]
+   * @params [conditions={ primaryKey: this.attributes[primaryKey] }]
    */
   delete(conditions?: Partial<T>) {
     const query = conditions ? conditions : this.getDefaultQuery()
@@ -256,7 +247,6 @@ export class Model<T> {
 
   /**
    * Returns true if the `attributes` property evaluates to false
-   * @return {boolean}
    */
   isEmpty(): boolean {
     return !this.attributes
@@ -264,8 +254,8 @@ export class Model<T> {
 
   /**
    * Get a value for a given property name
-   * @param  {string} [key] - Key on the attributes object. If falsy, it'll return the full attributes object
-   * @return {object} Value found, if any
+   * @param  [key] - Key on the attributes object. If falsy, it'll return the full attributes object
+   * @return Value found, if any
    */
   get<K extends keyof T>(key: K): T[K] {
     return this.attributes[key]
@@ -273,7 +263,6 @@ export class Model<T> {
 
   /**
    * Gets all model attributes
-   * @return {object} attributes
    */
   getAll(): T {
     return this.attributes
@@ -281,8 +270,8 @@ export class Model<T> {
 
   /**
    * Get a nested attribute for an object. Inspired on [immutable js getIn]{@link https://facebook.github.io/immutable-js/docs/#/Map/getIn}
-   * @param  {array} keyPath - Path of keys to follow
-   * @return {object} The value of the searched key or null if any key is missing along the way
+   * @param  keyPath - Path of keys to follow
+   * @return The value of the searched key or null if any key is missing along the way
    */
   getIn(keyPath: string[]) {
     if (keyPath.length === 0) return null
@@ -299,9 +288,9 @@ export class Model<T> {
 
   /**
    * Set a top level key with a value
-   * @param {string} key
-   * @param {object} value
-   * @return {Model<instace>} The instance of the model (chainable)
+   * @param key
+   * @param value
+   * @return The instance of the model (chainable)
    */
   set<K extends keyof T>(key: K, value: T[K]): Model<T> {
     this.attributes[key] = value
@@ -311,9 +300,9 @@ export class Model<T> {
   /**
    * Set a nested attribute for an object.
    * It shortcircuits if any key is missing. Inspired on [immutable js setIn]{@link https://facebook.github.io/immutable-js/docs/#/Map/setIn}
-   * @param  {array} keyPath - Path of keys
-   * @param  {object} value  - Value to set
-   * @return {Model<instace>} The instance of the model (chainable)
+   * @param  keyPath - Path of keys
+   * @param  value  - Value to set
+   * @return The instance of the model (chainable)
    */
   setIn(keyPath: string[], value) {
     let keyAmount = keyPath.length
@@ -336,8 +325,8 @@ export class Model<T> {
 
   /**
    * Assign object properties to the stored attributes
-   * @param {object} template
-   * @return {Model<instace>} The instance of the model (chainable)
+   * @param template
+   * @return The instance of the model (chainable)
    */
   assign(template: Partial<T>): Model<T> {
     Object.assign(this.attributes, template)
