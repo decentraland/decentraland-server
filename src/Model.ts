@@ -272,6 +272,14 @@ export class Model<T> {
   }
 
   /**
+   * Gets all model attributes
+   * @return {object} attributes
+   */
+  getAll(): T {
+    return this.attributes
+  }
+
+  /**
    * Get a nested attribute for an object. Inspired on [immutable js getIn]{@link https://facebook.github.io/immutable-js/docs/#/Map/getIn}
    * @param  {array} keyPath - Path of keys to follow
    * @return {object} The value of the searched key or null if any key is missing along the way
@@ -301,7 +309,8 @@ export class Model<T> {
   }
 
   /**
-   * Set a nested attribute for an object. It shortcircuits if any key is missing. Inspired on [immutable js setIn]{@link https://facebook.github.io/immutable-js/docs/#/Map/setIn}
+   * Set a nested attribute for an object.
+   * It shortcircuits if any key is missing. Inspired on [immutable js setIn]{@link https://facebook.github.io/immutable-js/docs/#/Map/setIn}
    * @param  {array} keyPath - Path of keys
    * @param  {object} value  - Value to set
    * @return {Model<instace>} The instance of the model (chainable)
@@ -322,6 +331,16 @@ export class Model<T> {
       }
     }
 
+    return this
+  }
+
+  /**
+   * Assign object properties to the stored attributes
+   * @param {object} template
+   * @return {Model<instace>} The instance of the model (chainable)
+   */
+  assign(template: Partial<T>): Model<T> {
+    Object.assign(this.attributes, template)
     return this
   }
 }
