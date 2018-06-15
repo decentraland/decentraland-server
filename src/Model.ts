@@ -247,9 +247,10 @@ export class Model<T> {
 
   /**
    * Returns true if the `attributes` property evaluates to false
+   * Or it's an empty object
    */
   isEmpty(): boolean {
-    return !this.attributes
+    return !this.attributes || Object.keys(this.attributes).length === 0
   }
 
   /**
@@ -329,7 +330,7 @@ export class Model<T> {
    * @return The instance of the model (chainable)
    */
   assign(template: Partial<T>): Model<T> {
-    Object.assign(this.attributes, template)
+    this.attributes = Object.assign({}, this.attributes, template)
     return this
   }
 }
