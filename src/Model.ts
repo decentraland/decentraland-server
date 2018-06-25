@@ -93,8 +93,8 @@ export class Model<T> {
    * @param  row
    * @return The row argument with the inserted primaryKey
    */
-  static async insert<U extends QueryPart = any>(row: U): Promise<U> {
-    return this._insert(row)
+  static async create<U extends QueryPart = any>(row: U): Promise<U> {
+    return this.insert(row)
   }
 
   /**
@@ -108,10 +108,10 @@ export class Model<T> {
     row: U,
     onConflict: OnConflict<U> = { target: [this.primaryKey] }
   ): Promise<U> {
-    return this._insert(row, onConflict)
+    return this.insert(row, onConflict)
   }
 
-  private static async _insert<U extends QueryPart = any>(
+  protected static async insert<U extends QueryPart = any>(
     row: U,
     onConflict?: OnConflict
   ): Promise<U> {
@@ -139,6 +139,7 @@ export class Model<T> {
       onConflict
     )
     row[this.primaryKey] = insertion.rows[0][this.primaryKey]
+
     return row
   }
 
@@ -216,15 +217,22 @@ export class Model<T> {
   /**
    * Forwards to Model.insert using this.attributes
    */
-  insert() {
-    return this.getConstructor().insert<T>(this.attributes)
+  async create() {
+    const row = await this.getConstructor().create<T>(this.attributes)
+    this.set(this.primaryKey, row[this.primaryKey])
+    return row
   }
 
   /**
    * Forwards to Model.insert using this.attributes and the supplied columns or the primaryKey as ON CONFLICT targets
    */
-  upsert<K extends keyof T>(onConflict?: OnConflict<T>) {
-    return this.getConstructor().upsert<T>(this.attributes, onConflict)
+  async upsert<K extends keyof T>(onConflict?: OnConflict<T>) {
+    const row = await this.getConstructor().upsert<T>(
+      this.attributes,
+      onConflict
+    )
+    this.set(this.primaryKey, row[this.primaryKey])
+    return row
   }
 
   /**
