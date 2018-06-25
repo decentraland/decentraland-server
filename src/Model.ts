@@ -138,7 +138,11 @@ export class Model<T> {
       this.primaryKey,
       onConflict
     )
-    row[this.primaryKey] = insertion.rows[0][this.primaryKey]
+    const newRow = insertion.rows[0]
+
+    if (newRow) {
+      row[this.primaryKey] = newRow[this.primaryKey]
+    }
 
     return row
   }
