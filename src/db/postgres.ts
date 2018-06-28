@@ -40,13 +40,13 @@ export class Postgres {
   count(
     tableName: string,
     conditions: QueryPart,
-    extra: string
+    extra: string = ''
   ): Promise<{ count: string }[]> {
     return this._query(
       'SELECT COUNT(*) as count',
       tableName,
       conditions,
-      null,
+      undefined,
       extra
     )
   }
@@ -91,34 +91,6 @@ export class Postgres {
     return rows[0]
   }
 
-  private async _query(
-    method: string,
-    tableName: string,
-    conditions?: QueryPart,
-    orderBy?: QueryPart,
-    extra: string = ''
-  ): Promise<any[]> {
-    let values = []
-    let where = ''
-    let order = ''
-
-    if (conditions) {
-      values = Object.values(conditions)
-      where = `WHERE ${this.toAssignmentFields(conditions).join(' AND ')}`
-    }
-
-    if (orderBy) {
-      order = `ORDER BY ${this.getOrderValues(orderBy)}`
-    }
-
-    const result = await this.client.query(
-      `${method} FROM ${tableName} ${where} ${order} ${extra}`,
-      values
-    )
-
-    return result.rows
-  }
-
   /**
    * Insert an object on the database.
    * @example
@@ -143,7 +115,7 @@ export class Postgres {
     const values = Object.values(changes)
     const conflictValues = Object.values(onConflict.changes || {})
 
-    return await this.client.query(
+    return this.client.query(
       `INSERT INTO ${tableName}(
         ${this.toColumnFields(changes)}
       ) VALUES(
@@ -189,7 +161,7 @@ export class Postgres {
 
     const values = changeValues.concat(conditionValues)
 
-    return await this.client.query(
+    return this.client.query(
       `UPDATE ${tableName}
       SET   ${this.toAssignmentFields(changes)}
       WHERE ${whereClauses.join(' AND ')}`,
@@ -309,7 +281,7 @@ export class Postgres {
    * @param indexStart - Where to start the placeholder index for update values
    */
   toOnConflictUpsert({ target, changes }: OnConflict, indexStart = 0) {
-    return target.length > 0
+    return target.length > 0 && changes
       ? `ON CONFLICT (${target}) DO
         UPDATE SET ${this.toAssignmentFields(changes, indexStart)}`
       : 'ON CONFLICT DO NOTHING'
@@ -364,7 +336,35 @@ export class Postgres {
    * Close db connection
    */
   async close() {
-    return await this.client.end()
+    return this.client.end()
+  }
+
+  private async _query(
+    method: string,
+    tableName: string,
+    conditions?: QueryPart,
+    orderBy?: QueryPart,
+    extra: string = ''
+  ): Promise<any[]> {
+    let values: any[] = []
+    let where = ''
+    let order = ''
+
+    if (conditions) {
+      values = Object.values(conditions)
+      where = `WHERE ${this.toAssignmentFields(conditions).join(' AND ')}`
+    }
+
+    if (orderBy) {
+      order = `ORDER BY ${this.getOrderValues(orderBy)}`
+    }
+
+    const result = await this.client.query(
+      `${method} FROM ${tableName} ${where} ${order} ${extra}`,
+      values
+    )
+
+    return result.rows
   }
 }
 

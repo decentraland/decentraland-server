@@ -6,7 +6,7 @@ import { PrimaryKey, QueryPart, OnConflict } from './db/types'
  * Basic Model class for accesing inner attributes easily
  */
 export class Model<T> {
-  public static tableName: string = null
+  public static tableName: string = ''
   public static primaryKey: string = 'id'
   public static withTimestamps: boolean = true
 
@@ -16,14 +16,35 @@ export class Model<T> {
   public static db: Postgres = clients.postgres
 
   /**
+   * Checks to see if all column names exist on the attributes object.
+   * If you need a more complex approach (skipping NULLABLE columns for example) you can override it.
+   * @param  attributes - Model attributes to check
+   * @return True if at least one of the properties don't exist on the object
+   */
+  public attributes: T
+  public tableName: string
+  public primaryKey: keyof T
+
+  /**
+   * Creates a new instance storing the attributes for later use
+   * @param attributes
+   */
+  constructor(attributes?: T) {
+    const Constructor = this.getConstructor()
+
+    this.tableName = Constructor.tableName
+    this.primaryKey = Constructor.primaryKey as keyof T
+
+    if (attributes) {
+      this.attributes = attributes
+    }
+  }
+
+  /**
    * Change the current DB client
    * @param dbClient - The name of an available db client (from /db) or an object with the same API
    */
   static setDb(clientName: keyof typeof clients = 'postgres') {
-    if (typeof clientName === 'string' && !clients[clientName]) {
-      throw new Error(`Undefined db client ${clients}`)
-    }
-
     this.db = clients[clientName]
   }
 
@@ -85,7 +106,7 @@ export class Model<T> {
    * @return Array containing the matched rows
    */
   static async query<U = any>(queryString, values?: any[]): Promise<U[]> {
-    return await this.db.query(queryString, values)
+    return this.db.query(queryString, values)
   }
 
   /**
@@ -111,42 +132,6 @@ export class Model<T> {
     return this.insert(row, onConflict)
   }
 
-  protected static async insert<U extends QueryPart = any>(
-    row: U,
-    onConflict?: OnConflict
-  ): Promise<U> {
-    const createdAt = new Date()
-    const updatedAt = new Date()
-
-    if (onConflict) {
-      onConflict.changes = onConflict.changes || row
-    }
-
-    if (this.withTimestamps) {
-      row.created_at = row.created_at || createdAt
-      row.updated_at = row.updated_at || updatedAt
-
-      if (onConflict) {
-        onConflict.changes.updated_at =
-          onConflict.changes.updated_at || updatedAt
-      }
-    }
-
-    const insertion = await this.db.insert(
-      this.tableName,
-      row,
-      this.primaryKey,
-      onConflict
-    )
-    const newRow = insertion.rows[0]
-
-    if (newRow) {
-      row[this.primaryKey] = newRow[this.primaryKey]
-    }
-
-    return row
-  }
-
   /**
    * Update the row on the Model.tableName table.
    * @param changes    - An object describing the updates.
@@ -170,30 +155,46 @@ export class Model<T> {
     return this.db.delete(this.tableName, conditions)
   }
 
-  /**
-   * Checks to see if all column names exist on the attributes object.
-   * If you need a more complex approach (skipping NULLABLE columns for example) you can override it.
-   * @param  attributes - Model attributes to check
-   * @return True if at least one of the properties don't exist on the object
-   */
-  public attributes: T
-  public tableName: string
-  public primaryKey: keyof T
+  protected static async insert<U extends QueryPart = any>(
+    row: U,
+    onConflict?: OnConflict
+  ): Promise<U> {
+    const createdAt = new Date()
+    const updatedAt = new Date()
 
-  /**
-   * Creates a new instance storing the attributes for later use
-   * @param attributes
-   */
-  constructor(attributes?: T) {
-    const Constructor = this.getConstructor()
+    if (onConflict) {
+      onConflict.changes = onConflict.changes || row
+    }
 
-    this.tableName = Constructor.tableName
-    this.attributes = attributes
-    this.primaryKey = Constructor.primaryKey as keyof T
+    if (this.withTimestamps) {
+      row.created_at = row.created_at || createdAt
+      row.updated_at = row.updated_at || updatedAt
+
+      if (onConflict) {
+        const changes = onConflict.changes || {}
+        changes.updated_at = changes.updated_at || updatedAt
+
+        onConflict.changes = changes
+      }
+    }
+
+    const insertion = await this.db.insert(
+      this.tableName,
+      row,
+      this.primaryKey,
+      onConflict
+    )
+    const newRow = insertion.rows[0]
+
+    if (newRow) {
+      row[this.primaryKey] = newRow[this.primaryKey]
+    }
+
+    return row
   }
 
   getConstructor() {
-    return <typeof Model>this.constructor
+    return this.constructor as typeof Model
   }
 
   /**

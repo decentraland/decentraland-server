@@ -5,14 +5,10 @@ import * as inquirer from 'inquirer'
  * Runs a set of different clients. Useful to split functionalities and lower boilerplate code
  * @param clients - An array of objects that implement the `addCommand method`
  */
-export function runProgram(clients: { addCommands: (program: any) => void }[]) {
+export function runProgram(
+  clients: { addCommands: (program: program.CommanderStatic) => void }[]
+) {
   for (const client of clients) {
-    if (typeof client.addCommands !== 'function') {
-      throw new Error(
-        'Each client supplied to `runProgram` must implement the `addCommands` function'
-      )
-    }
-
     client.addCommands(program)
   }
 

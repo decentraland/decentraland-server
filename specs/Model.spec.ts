@@ -28,7 +28,7 @@ describe('Model Class', function() {
     })
 
     it('should return undefined if the value does not exist', function() {
-      expect(instance.get('nonsense')).to.be.undefined
+      expect(instance.get('nonsense')).to.be.eq(undefined)
     })
   })
 
@@ -38,7 +38,7 @@ describe('Model Class', function() {
     })
 
     it('should return null if part of the key path does not exist', function() {
-      expect(instance.getIn(['a', 'nonsense', 'inner'])).to.be.null
+      expect(instance.getIn(['a', 'nonsense', 'inner'])).to.be.eq(null)
     })
   })
 
@@ -64,7 +64,7 @@ describe('Model Class', function() {
     })
 
     it('should return null if part of the key path does not exist', function() {
-      expect(instance.setIn(['a', 'nonsense', 'inner'], 22)).to.be.null
+      expect(instance.setIn(['a', 'nonsense', 'inner'], 22)).to.be.eq(null)
     })
   })
 })

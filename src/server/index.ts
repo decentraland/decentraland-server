@@ -1,7 +1,7 @@
 import { Request, Response, RequestHandler } from 'express'
 import * as Rollbar from 'rollbar'
 
-let rollbar = null
+let rollbar: Rollbar
 
 /**
  * Set up rollbar integration to report server errors raised while using {@link server#handleRequest}
@@ -22,7 +22,7 @@ export function useRollbar(accessToken: string): void {
  * @return - Wrapper function
  */
 export function handleRequest(
-  callback: (req: Request, res: Response) => void
+  callback: (req: Request, res: Response) => Promise<any>
 ): RequestHandler {
   return async (req, res) => {
     try {
@@ -47,7 +47,7 @@ export function handleRequest(
  * @return - The param value, it throws if it's not present
  */
 export function extractFromReq(req: Request, param: string): string {
-  let value = null
+  let value = ''
 
   if (req.query[param]) {
     value = req.query[param]

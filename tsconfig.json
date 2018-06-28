@@ -17,12 +17,9 @@
     "newLine": "LF",
     "stripInternal": true,
     "removeComments": true,
+    "strictNullChecks": true,
     "pretty": true,
-    "plugins": [
-      {
-        "name": "tslint-language-service"
-      }
-    ],
+    "plugins": [{ "name": "tslint-language-service" }],
     "lib": ["es2017"]
   },
   "exclude": ["node_modules", "dist"]
