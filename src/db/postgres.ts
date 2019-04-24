@@ -14,9 +14,12 @@ export class Postgres {
    * Connect to the Postgres database
    * @param connectionString
    */
-  connect(connectionString?: string) {
+  async connect(connectionString?: string): Promise<pg.Client> {
     this.client = new pg.Client(connectionString)
-    return this.client.connect()
+
+    await this.client.connect()
+
+    return this.client
   }
 
   /**
