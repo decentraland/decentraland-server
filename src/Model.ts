@@ -159,14 +159,17 @@ export class Model<T> {
     row: U,
     onConflict?: OnConflict
   ): Promise<U> {
-    const createdAt = new Date()
-    const updatedAt = new Date()
+    row = Object.assign({}, row) // Shallow copy, we only modify top level props
 
     if (onConflict) {
-      onConflict.changes = onConflict.changes || row
+      const changes = Object.assign({}, onConflict.changes) // Shallow copy, we only modify top level props
+      onConflict.changes = onConflict.changes ? changes : row
     }
 
     if (this.withTimestamps) {
+      const createdAt = new Date()
+      const updatedAt = new Date()
+
       row.created_at = row.created_at || createdAt
       row.updated_at = row.updated_at || updatedAt
 
