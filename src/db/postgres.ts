@@ -106,7 +106,7 @@ export class Postgres {
   async insert(
     tableName: string,
     changes: QueryPart,
-    primaryKey: string = 'id',
+    primaryKey: string = '',
     onConflict: OnConflict = { target: [], changes: {} }
   ): Promise<any> {
     if (!changes) {
@@ -117,6 +117,7 @@ export class Postgres {
 
     const values = Object.values(changes)
     const conflictValues = Object.values(onConflict.changes || {})
+    const returning = primaryKey ? `RETURNING ${primaryKey}` : ''
 
     return this.client.query(
       `INSERT INTO ${tableName}(
@@ -125,7 +126,7 @@ export class Postgres {
         ${this.toValuePlaceholders(changes)}
       )
         ${this.toOnConflictUpsert(onConflict, values.length)}
-        RETURNING ${primaryKey}`,
+        ${returning}`,
       values.concat(conflictValues)
     )
   }
@@ -212,13 +213,14 @@ export class Postgres {
     rows: string[],
     options: { sequenceName?: string; primaryKey?: string } = {}
   ): Promise<void> {
-    const { sequenceName = `${tableName}_id_seq`, primaryKey = 'id' } = options
+    const { sequenceName = `${tableName}_id_seq`, primaryKey = '' } = options
+    const primaryKeyClause = primaryKey ? `PRIMARY KEY ("${primaryKey}")` : ''
 
     if (sequenceName) await this.createSequence(sequenceName)
 
     await this.client.query(`CREATE TABLE IF NOT EXISTS "${tableName}" (
       ${rows}
-      PRIMARY KEY ("${primaryKey}")
+      ${primaryKeyClause}
     );`)
 
     if (sequenceName) await this.alterSequenceOwnership(sequenceName, tableName)

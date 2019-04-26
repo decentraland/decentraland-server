@@ -189,7 +189,7 @@ export class Model<T> {
     )
     const newRow = insertion.rows[0]
 
-    if (newRow) {
+    if (newRow && this.primaryKey) {
       row[this.primaryKey] = newRow[this.primaryKey]
     }
 
