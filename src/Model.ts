@@ -15,12 +15,6 @@ export class Model<T> {
    */
   public static db: Postgres = clients.postgres
 
-  /**
-   * Checks to see if all column names exist on the attributes object.
-   * If you need a more complex approach (skipping NULLABLE columns for example) you can override it.
-   * @param  attributes - Model attributes to check
-   * @return True if at least one of the properties don't exist on the object
-   */
   public attributes: T
   public tableName: string
   public primaryKey: keyof T
