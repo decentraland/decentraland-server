@@ -16,13 +16,14 @@ export function useRollbar(accessToken: string): void {
  * Wrapper for the request handler. It creates the appropiate response object and catches errors. For example:
  *     app.post('/api/path', handleRequest(async (req, res) => {
  *        const param = extractFromReq(req, 'param')
+ *        await something()
  *        return 'Success'
  *    }))
  * @param callback - Actual handler, the return value will be used as response to the client. It will receive (req, res) as parameters
  * @return - Wrapper function
  */
 export function handleRequest(
-  callback: (req: Request, res: Response) => Promise<any>
+  callback: (req: Request, res: Response) => any
 ): RequestHandler {
   return async (req, res) => {
     try {
