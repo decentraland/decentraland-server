@@ -63,15 +63,15 @@ export class Model<T> {
   static findOne<U = any, P extends QueryPart = any>(
     primaryKey: PrimaryKey,
     orderBy?: Partial<P>
-  )
+  ): Promise<U | undefined>
   static findOne<U extends QueryPart = any, P extends QueryPart = any>(
     conditions: Partial<U>,
     orderBy?: Partial<P>
-  )
+  ): Promise<U | undefined>
   static findOne<U extends QueryPart = any, P extends QueryPart = any>(
     primaryKeyOrCond: PrimaryKey | Partial<U>,
     orderBy?: Partial<P>
-  ): Promise<U> {
+  ): Promise<U | undefined> {
     const conditions =
       typeof primaryKeyOrCond === 'object'
         ? primaryKeyOrCond
@@ -211,7 +211,10 @@ export class Model<T> {
     const Constructor = this.getConstructor()
     const query = conditions ? conditions : this.getDefaultQuery()
 
-    this.attributes = await Constructor.findOne<T>(query)
+    const attributes = await Constructor.findOne<T>(query)
+    if (attributes) {
+      this.attributes = attributes
+    }
 
     return this.attributes
   }
