@@ -135,9 +135,10 @@ export class Model<T> {
     changes: Partial<U>,
     conditions: Partial<P>
   ) {
-    if (this.withTimestamps) {
-      changes.updated_at = changes.updated_at || new Date()
-    }
+    changes = this.withTimestamps
+      ? { ...changes, updated_at: changes.updated_at || new Date() }
+      : changes
+
     return this.db.update(this.tableName, changes, conditions)
   }
 
@@ -161,15 +162,16 @@ export class Model<T> {
     }
 
     if (this.withTimestamps) {
-      const createdAt = new Date()
-      const updatedAt = new Date()
+      const now = new Date()
 
-      row.created_at = row.created_at || createdAt
-      row.updated_at = row.updated_at || updatedAt
+      Object.assign(row, {
+        created_at: row.created_at || now,
+        updated_at: row.updated_at || now
+      })
 
       if (onConflict) {
         const changes = onConflict.changes || {}
-        changes.updated_at = changes.updated_at || updatedAt
+        changes.updated_at = changes.updated_at || now
 
         onConflict.changes = changes
       }
@@ -184,7 +186,7 @@ export class Model<T> {
     const newRow = insertion.rows[0]
 
     if (newRow && this.primaryKey) {
-      row[this.primaryKey] = newRow[this.primaryKey]
+      Object.assign(row, { [this.primaryKey]: newRow[this.primaryKey] })
     }
 
     return row
