@@ -58,10 +58,6 @@ export function extractFromReq(req: Request, param: string): string {
     value = req.params[param]
   }
 
-  if (req.headers['content-type'] === 'application/json') {
-    value = JSON.parse(value)
-  }
-
   if (!value) {
     throw new Error(`Could not get ${param} from request`)
   }
