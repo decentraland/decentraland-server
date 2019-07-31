@@ -22,6 +22,9 @@ export function useRollbar(accessToken: string): void {
  * @param callback - Actual handler, the return value will be used as response to the client. It will receive (req, res) as parameters
  * @return - Wrapper function
  */
+export function handleRequest<T = Request, U = Response>(
+  callback: (req: T, res: U) => any
+): RequestHandler
 export function handleRequest(
   callback: (req: Request, res: Response) => any
 ): RequestHandler {
@@ -47,8 +50,8 @@ export function handleRequest(
  * @param param - Searched param
  * @return - The param value, it throws if it's not present
  */
-export function extractFromReq(req: Request, param: string): string {
-  let value = ''
+export function extractFromReq<T = string>(req: Request, param: string): T {
+  let value
 
   if (req.query[param]) {
     value = req.query[param]
