@@ -68,10 +68,10 @@ export function extractFromReq<T = string>(req: Request, param: string): T {
   return value
 }
 
-function sendOk(data) {
+export function sendOk(data) {
   return { ok: true, data }
 }
 
-function sendError(data, error) {
+export function sendError(data, error) {
   return { ok: false, data, error }
 }
