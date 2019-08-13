@@ -338,6 +338,16 @@ export class Postgres {
   }
 
   /**
+   * Control how a specific postgres type will be handled
+   * Check https://github.com/brianc/node-pg-types for more info
+   * @param oid - a number representing a type
+   * @param parser - function that handles the parsing
+   */
+  setTypeParser(oid: number, parser: (value: any) => any) {
+    pg.types.setTypeParser(oid, parser)
+  }
+
+  /**
    * Close db connection
    */
   async close() {
