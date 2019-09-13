@@ -36,8 +36,13 @@ export function handleRequest(
     } catch (error) {
       const data = error.data || {}
       const message = error.message
+      const statusCode = error.statusCode
 
       if (rollbar) rollbar.error(error, req)
+
+      if (statusCode) {
+        res.status(statusCode)
+      }
 
       return res.json(sendError(data, message))
     }
