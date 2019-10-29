@@ -38,6 +38,7 @@
     "semi": false
   },
   "dependencies": {
+    "@types/commander": "^2.12.2",
     "commander": "^2.20.0",
     "inquirer": "^6.5.0",
     "npm-check-updates": "^3.1.20",
@@ -57,7 +58,7 @@
     "jsdoc": "^3.6.3",
     "mocha": "^6.2.0",
     "prettier": "^1.18.2",
-    "semantic-release": "^15.13.19",
+    "semantic-release": "^15.13.28",
     "tslint": "^5.18.0",
     "tslint-language-service": "^0.9.9",
     "tslint-plugin-prettier": "^2.0.1",
