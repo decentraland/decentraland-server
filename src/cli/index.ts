@@ -47,3 +47,6 @@ export async function confirm(
 export function prompt(questions: any[]): Promise<any> {
   return inquirer.prompt(questions)
 }
+
+// Commander types
+export type Program = typeof program
