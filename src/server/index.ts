@@ -58,11 +58,11 @@ export function handleRequest(
 export function extractFromReq<T = string>(req: Request, param: string): T {
   let value
 
-  if (req.query[param]) {
+  if (req.query && req.query[param]) {
     value = req.query[param]
-  } else if (req.body[param]) {
+  } else if (req.body && req.body[param]) {
     value = req.body[param]
-  } else if (req.params[param]) {
+  } else if (req.params && req.params[param]) {
     value = req.params[param]
   }
 
