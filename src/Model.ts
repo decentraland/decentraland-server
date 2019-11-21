@@ -15,7 +15,7 @@ export class Model<T> {
    */
   public static db: Postgres = clients.postgres
 
-  public attributes: T
+  public attributes: Partial<T>
   public tableName: string
   public primaryKey: keyof T
 
@@ -23,7 +23,7 @@ export class Model<T> {
    * Creates a new instance storing the attributes for later use
    * @param attributes
    */
-  constructor(attributes?: T) {
+  constructor(attributes?: Partial<T>) {
     const Constructor = this.getConstructor()
 
     this.tableName = Constructor.tableName
@@ -206,39 +206,42 @@ export class Model<T> {
   }
 
   /**
-   * Return the row for the this.attributes primaryKey property or the supplied conditions, forwards to Model.findOne
-   * @param  conditions - An object describing the WHERE clause.
+   * Set the row for the this.attributes primaryKey property or the supplied conditions, forwards to Model.findOne
    */
-  async retreive(conditions?: Partial<T>): Promise<T> {
+  async retreive() {
     const Constructor = this.getConstructor()
-    const query = conditions ? conditions : this.getDefaultQuery()
+    const query = this.getDefaultQuery()
 
     const attributes = await Constructor.findOne<T>(query)
     if (attributes) {
       this.attributes = attributes
     }
 
-    return this.attributes
+    return this
   }
 
   /**
    * Forwards to Model.insert using this.attributes
    */
   async create() {
-    const row = await this.getConstructor().create<T>(this.attributes)
-    this.set(this.primaryKey, row[this.primaryKey])
+    const row = await this.getConstructor().create<Partial<T>>(this.attributes)
+    if (row[this.primaryKey]) {
+      this.set(this.primaryKey, row[this.primaryKey]!)
+    }
     return row
   }
 
   /**
    * Forwards to Model.insert using this.attributes and the supplied columns or the primaryKey as ON CONFLICT targets
    */
-  async upsert<K extends keyof T>(onConflict?: OnConflict<T>) {
-    const row = await this.getConstructor().upsert<T>(
+  async upsert<K extends keyof T>(onConflict?: OnConflict<Partial<T>>) {
+    const row = await this.getConstructor().upsert<Partial<T>>(
       this.attributes,
       onConflict
     )
-    this.set(this.primaryKey, row[this.primaryKey])
+    if (row[this.primaryKey]) {
+      this.set(this.primaryKey, row[this.primaryKey]!)
+    }
     return row
   }
 
@@ -273,14 +276,14 @@ export class Model<T> {
    * @param  [key] - Key on the attributes object. If falsy, it'll return the full attributes object
    * @return Value found, if any
    */
-  get<K extends keyof T>(key: K): T[K] {
+  get<K extends keyof T>(key: K): T[K] | undefined {
     return this.attributes[key]
   }
 
   /**
    * Gets all model attributes
    */
-  getAll(): T {
+  getAll() {
     return this.attributes
   }
 
