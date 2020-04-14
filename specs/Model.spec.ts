@@ -2,13 +2,22 @@ import { expect } from 'chai'
 import { Model } from '../src/Model'
 
 describe('Model Class', function() {
+  type ValueAttributes = {
+    a: {
+      b: string
+      c: { inner: string }
+    }
+    d: string
+    f: { g: string[] }
+  }
   const bValue = 'This is B value'
   const dValue = 'And this is D value'
 
   let instance
 
   beforeEach(() => {
-    instance = new Model({
+    class ValueModel extends Model<ValueAttributes>() {}
+    instance = new ValueModel({
       a: {
         b: bValue,
         c: {
