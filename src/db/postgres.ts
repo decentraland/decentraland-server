@@ -67,7 +67,7 @@ export class Postgres {
     conditions?: QueryPart,
     orderBy?: QueryPart,
     extra?: string
-  ): Promise<any> {
+  ) {
     return this._query('SELECT *', tableName, conditions, orderBy, extra)
   }
 
@@ -82,7 +82,7 @@ export class Postgres {
     tableName: string,
     conditions?: QueryPart,
     orderBy?: QueryPart
-  ): Promise<any> {
+  ) {
     const rows = await this._query(
       'SELECT *',
       tableName,
@@ -108,7 +108,7 @@ export class Postgres {
     changes: QueryPart,
     primaryKey: string = '',
     onConflict: OnConflict = { target: [], changes: {} }
-  ): Promise<any> {
+  ) {
     if (!changes) {
       throw new Error(
         `Tried to perform an insert on ${tableName} without any values. Supply a changes object`
@@ -139,11 +139,7 @@ export class Postgres {
    * @param changes    - An object describing the changes. The properties should be the column names and it's values the value to update.
    * @param conditions - An object describing the WHERE clause. The properties should be the column names and it's values the condition value.
    */
-  async update(
-    tableName: string,
-    changes: QueryPart,
-    conditions: QueryPart
-  ): Promise<any> {
+  async update(tableName: string, changes: QueryPart, conditions: QueryPart) {
     if (!changes) {
       throw new Error(
         `Tried to update ${tableName} without any values. Supply a changes object`
@@ -178,7 +174,7 @@ export class Postgres {
    * @param tableName
    * @param conditions - An object describing the WHERE clause.
    */
-  delete(tableName: string, conditions: QueryPart): Promise<any> {
+  delete(tableName: string, conditions: QueryPart) {
     if (!conditions) {
       throw new Error(
         `Tried to update ${tableName} without a WHERE clause. Supply a conditions object`
@@ -212,7 +208,7 @@ export class Postgres {
     tableName: string,
     rows: string[],
     options: { sequenceName?: string; primaryKey?: string } = {}
-  ): Promise<void> {
+  ) {
     const { sequenceName = `${tableName}_id_seq`, primaryKey = '' } = options
     const primaryKeyClause = primaryKey ? `PRIMARY KEY ("${primaryKey}")` : ''
 
@@ -360,7 +356,7 @@ export class Postgres {
     conditions?: QueryPart,
     orderBy?: QueryPart,
     extra: string = ''
-  ): Promise<any[]> {
+  ) {
     let values: any[] = []
     let where = ''
     let order = ''
