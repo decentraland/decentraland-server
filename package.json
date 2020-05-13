@@ -44,12 +44,12 @@
     "commander": "2.20.1",
     "inquirer": "^7.0.0",
     "pg": "^7.12.1",
-    "rollbar": "^2.16.0"
+    "rollbar": "^2.14.3"
   },
   "devDependencies": {
     "@types/chai": "^4.2.4",
     "@types/mocha": "^5.2.7",
-    "@types/node": "^12.12.7",
+    "@types/node": "^12.12.39",
     "chai": "^4.2.0",
     "dcl-tslint-config-standard": "^2.0.0",
     "husky": "^3.0.9",
@@ -60,7 +60,7 @@
     "tslint": "^5.20.1",
     "tslint-language-service": "^0.9.9",
     "tslint-plugin-prettier": "^2.0.1",
-    "typescript": "^3.7.2",
+    "typescript": "^3.9.2",
     "validate-commit-msg": "^2.14.0"
   }
 }
