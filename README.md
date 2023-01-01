@@ -60,3 +60,4 @@ You can see an example of a fix in this repos [`config.yml`](https://github.com/
 [`node-hid`](https://github.com/node-hid/node-hid) is a dependency of [`ledgerco`](https://github.com/LedgerHQ/ledgerjs), which in turn is a dependency of [`ledger-wallet-provider`](https://github.com/Neufund/ledger-wallet-provider), used by this lib.
 
 
+test
