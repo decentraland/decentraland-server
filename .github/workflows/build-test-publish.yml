@@ -17,9 +17,9 @@ jobs:
         run: npm run prebuild && npm test
       - name: Build
         run: npm run build
-      # - name: Publish
-      #   if: github.ref == 'refs/heads/master'
-      #   env:
-      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: npm run semantic-release
+      - name: Publish
+        if: github.ref == 'refs/heads/master'
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run semantic-release
