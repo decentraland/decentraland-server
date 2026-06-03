@@ -59,7 +59,7 @@
     "jsdoc": "^3.6.3",
     "mocha": "^7.1.2",
     "prettier": "^1.19.1",
-    "semantic-release": "^17.3.9",
+    "semantic-release": "^19.0.3",
     "tslint": "^5.20.1",
     "tslint-language-service": "^0.9.9",
     "tslint-plugin-prettier": "^2.0.1",
