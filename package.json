@@ -57,7 +57,7 @@
     "dcl-tslint-config-standard": "^2.0.0",
     "husky": "^3.0.9",
     "jsdoc": "^3.6.3",
-    "mocha": "^7.1.2",
+    "mocha": "^10.2.0",
     "prettier": "^1.19.1",
     "semantic-release": "^17.3.9",
     "tslint": "^5.20.1",
